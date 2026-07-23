@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control y Revisión de Asistencia - UTM</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-6">
+
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md border border-gray-200">
+        <!-- Encabezado -->
+        <div class="flex justify-between items-center mb-6 border-b pb-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">📋 Control y Revisión de Asistencia</h1>
+                <p class="text-xs text-gray-500">E.E.B.V.R. Profesor Edison</p>
+            </div>
+            <a href="index.html" class="text-sm bg-gray-500 hover:bg-gray-600 text-white px-3 py-1.5 rounded transition font-medium">Volver a Notas</a>
+        </div>
+
+        <!-- Pestañas de Navegación Interna -->
+        <div class="flex gap-2 mb-6 border-b border-gray-200 pb-2">
+            <button id="tabRegistro" class="text-sm font-bold px-4 py-2 text-blue-600 border-b-2 border-blue-600 outline-none cursor-pointer">
+                Tomar / Editar Asistencia
+            </button>
+            <button id="tabResumen" class="text-sm font-medium px-4 py-2 text-gray-500 hover:text-gray-700 outline-none cursor-pointer">
+                📊 Resumen General de Faltas
+            </button>
+        </div>
+
+        <!-- VISTA 1: REGISTRO Y REVISIÓN POR FECHA (Por defecto) -->
+        <div id="seccionRegistro">
+            <!-- Filtros de Fecha -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded-lg">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase">Seleccione la Fecha para Registrar o Revisar:</label>
+                    <input type="date" id="fechaInput" class="w-full mt-1 p-2 border rounded-md bg-white text-sm outline-none">
+                </div>
+                <div class="flex items-end">
+                    <button id="btnBuscar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-md text-sm transition cursor-pointer">
+                        🔍 Cargar Alumnos de esta Fecha
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabla de Estudiantes -->
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse text-left text-sm text-gray-600">
+                    <thead class="bg-gray-100 text-xs uppercase font-bold text-gray-700 border-b">
+                        <tr>
+                            <th class="p-3">Estudiante</th>
+                            <th class="p-3 text-center">Estado de Asistencia (Editable)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaAsistencia" class="divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="2" class="p-4 text-center text-gray-400">Seleccione una fecha y haga clic en Cargar Alumnos</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Botón Guardar -->
+            <div class="mt-6 flex justify-end">
+                <button id="btnGuardar" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-lg text-sm shadow transition cursor-pointer hidden">
+                    💾 Guardar / Modificar Asistencia
+                </button>
+            </div>
+        </div>
+
+        <!-- VISTA 2: RESUMEN GENERAL (Oculta al principio) -->
+        <div id="seccionResumen" class="hidden">
+            <div class="bg-blue-50 p-4 rounded-lg mb-6 border border-blue-100">
+                <p class="text-xs text-blue-800 font-medium">💡 Aquí puedes revisar el consolidado total de faltas y asistencias acumuladas de todos los alumnos en lo que va del ciclo.</p>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse text-left text-sm text-gray-600">
+                    <thead class="bg-gray-100 text-xs uppercase font-bold text-gray-700 border-b">
+                        <tr>
+                            <th class="p-3">Estudiante</th>
+                            <th class="p-3 text-center text-green-700 bg-green-50">Asistencias Total</th>
+                            <th class="p-3 text-center text-red-700 bg-red-50">Faltas Total</th>
+                            <th class="p-3 text-center text-amber-700 bg-amber-50">Justificados Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaResumenGeneral" class="divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="4" class="p-4 text-center text-gray-400">Cargando reporte consolidado...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 🛡️ CONTROL DE SEGURIDAD INSTANTÁNEO para Asistencia
+        const usuarioLogueado = sessionStorage.getItem('usuario');
+
+        if (!usuarioLogueado) {
+            alert("🔒 Acceso denegado: Por favor, inicie sesión primero.");
+            window.location.href = 'login.html';
+        } else {
+            console.log("¡Acceso concedido al profesor:", usuarioLogueado);
+        }
+
+        const API_URL = 'http://localhost:3000';
+        
+        // 📅 Configurar la fecha de hoy y BLOQUEAR días futuros en el selector
+        const inputFecha = document.getElementById('fechaInput');
+        const hoyStr = new Date().toISOString().split('T')[0];
+        
+        inputFecha.value = hoyStr;
+        inputFecha.max = hoyStr; // Deshabilita en el calendario las fechas posteriores a hoy
+
+        // LÓGICA DE PESTAÑAS (Tabs)
+        const tabRegistro = document.getElementById('tabRegistro');
+        const tabResumen = document.getElementById('tabResumen');
+        const seccionRegistro = document.getElementById('seccionRegistro');
+        const seccionResumen = document.getElementById('seccionResumen');
+
+        tabRegistro.addEventListener('click', () => {
+            tabRegistro.className = "text-sm font-bold px-4 py-2 text-blue-600 border-b-2 border-blue-600 outline-none cursor-pointer";
+            tabResumen.className = "text-sm font-medium px-4 py-2 text-gray-500 hover:text-gray-700 outline-none cursor-pointer";
+            seccionRegistro.classList.remove('hidden');
+            seccionResumen.classList.add('hidden');
+        });
+
+        tabResumen.addEventListener('click', () => {
+            tabResumen.className = "text-sm font-bold px-4 py-2 text-blue-600 border-b-2 border-blue-600 outline-none cursor-pointer";
+            tabRegistro.className = "text-sm font-medium px-4 py-2 text-gray-500 hover:text-gray-700 outline-none cursor-pointer";
+            seccionRegistro.classList.add('hidden');
+            seccionResumen.classList.remove('hidden');
+            cargarResumenGeneral();
+        });
+
+        // 🔍 MODO 1: REVISAR / TOMAR ASISTENCIA POR FECHA ESPECÍFICA
+        document.getElementById('btnBuscar').addEventListener('click', async () => {
+            const fecha = document.getElementById('fechaInput').value;
+            if (!fecha) return alert("Por favor, selecciona una fecha válida.");
+
+            // 🛑 VALIDACIÓN ANTI-FECHAS FUTURAS
+            const hoy = new Date().toISOString().split('T')[0];
+            if (fecha > hoy) {
+                return alert("⚠️ No es posible registrar ni revisar asistencia para una fecha futura.");
+            }
+
+            try {
+                const respuesta = await fetch(`${API_URL}/asistencia/${fecha}`);
+                const estudiantes = await respuesta.json();
+
+                const tbody = document.getElementById('tablaAsistencia');
+                tbody.innerHTML = '';
+
+                if (estudiantes.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-red-500">No se encontraron estudiantes registrados.</td></tr>`;
+                    return;
+                }
+
+                estudiantes.forEach(est => {
+                    const estadoActual = est.estado || 'Asistencia';
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-gray-50 transition" data-id="${est.id_estudiante}">
+                            <td class="p-3 font-medium text-gray-800">${est.apellido} ${est.nombre}</td>
+                            <td class="p-3">
+                                <div class="flex justify-center gap-2">
+                                    <label class="flex items-center gap-1 bg-green-50 text-green-700 px-2.5 py-1 rounded border border-green-200 text-xs cursor-pointer">
+                                        <input type="radio" name="estado-${est.id_estudiante}" value="Asistencia" ${estadoActual === 'Asistencia' ? 'checked' : ''}> Asistió
+                                    </label>
+                                    <label class="flex items-center gap-1 bg-red-50 text-red-700 px-2.5 py-1 rounded border border-red-200 text-xs cursor-pointer">
+                                        <input type="radio" name="estado-${est.id_estudiante}" value="Falta" ${estadoActual === 'Falta' ? 'checked' : ''}> Faltó
+                                    </label>
+                                    <label class="flex items-center gap-1 bg-amber-50 text-amber-700 px-2.5 py-1 rounded border border-amber-200 text-xs cursor-pointer">
+                                        <input type="radio" name="estado-${est.id_estudiante}" value="Justificado" ${estadoActual === 'Justificado' ? 'checked' : ''}> Justificado
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('btnGuardar').classList.remove('hidden');
+
+            } catch (error) {
+                console.error(error);
+                alert("Error al conectar con el servidor.");
+            }
+        });
+
+        // 💾 Guardar o Actualizar Asistencia
+        document.getElementById('btnGuardar').addEventListener('click', async () => {
+            const fecha = document.getElementById('fechaInput').value;
+
+            // 🛑 VALIDACIÓN ANTI-FECHAS FUTURAS
+            const hoy = new Date().toISOString().split('T')[0];
+            if (fecha > hoy) {
+                return alert("⚠️ No se puede guardar asistencia en fechas futuras.");
+            }
+
+            const filas = document.querySelectorAll('#tablaAsistencia tr');
+            const registros = [];
+
+            filas.forEach(fila => {
+                const id_estudiante = fila.getAttribute('data-id');
+                if (id_estudiante) {
+                    const estado = fila.querySelector(`input[name="estado-${id_estudiante}"]:checked`).value;
+                    registros.push({ id_estudiante, estado });
+                }
+            });
+
+            try {
+                const respuesta = await fetch(`${API_URL}/asistencia`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fecha, registros })
+                });
+
+                if (respuesta.ok) {
+                    alert("📋 ¡Asistencia procesada correctamente!");
+                } else {
+                    alert("Error al intentar guardar la asistencia.");
+                }
+            } catch (error) {
+                console.error(error);
+                alert("No se pudo conectar con el backend.");
+            }
+        });
+
+        // 📊 MODO 2: REVISAR RESUMEN ACUMULADO DE TODOS LOS DÍAS
+        async function cargarResumenGeneral() {
+            const tbody = document.getElementById('tablaResumenGeneral');
+            try {
+                const respuesta = await fetch(`${API_URL}/asistencia-resumen`);
+                const datos = await respuesta.json();
+
+                tbody.innerHTML = '';
+
+                if (datos.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">Aún no hay registros de asistencia en la base de datos.</td></tr>`;
+                    return;
+                }
+
+                datos.forEach(row => {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="p-3 font-medium text-gray-800">${row.apellido} ${row.nombre}</td>
+                            <td class="p-3 text-center text-green-600 font-semibold bg-green-50/50">${row.asistencias}</td>
+                            <td class="p-3 text-center text-red-600 font-semibold bg-red-50/50">${row.faltas}</td>
+                            <td class="p-3 text-center text-amber-600 font-semibold bg-amber-50/50">${row.justificados}</td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error(error);
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">Error al cargar el resumen. Asegúrate de actualizar tu index.js</td></tr>`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - UTM</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center font-sans antialiased">
+
+    <!-- Contenedor Principal de Pantalla Dividida -->
+    <div class="w-full min-h-screen flex flex-col md:flex-row">
+        
+        <!-- PARTE IZQUIERDA: Escudo de la Institución (Oculto en móviles, visible desde tablets/PC) -->
+        <div class="hidden md:flex md:w-1/2 bg-gradient-to-br from-blue-700 to-blue-900 justify-center items-center p-12 relative overflow-hidden">
+            <!-- Decoración de fondo sutil -->
+            <div class="absolute inset-0 bg-black/10 pointer-events-none"></div>
+            
+            <div class="text-center z-10 max-w-sm flex flex-col items-center">
+                <!-- Escudo de tamaño grande para pantallas de PC/Laptop -->
+                <img src="escudo-utm.png" alt="Escudo UTM" class="w-72 h-auto object-contain drop-shadow-2xl mb-6 transition transform hover:scale-105 duration-300">
+                
+                <h2 class="text-2xl font-extrabold text-white tracking-wide uppercase">ESCUELA DE EDUCACIÓN BÁSICA "VICENTE ROCAFUERTE"</h2>
+                <div class="w-16 h-1 bg-amber-400 my-3 rounded-full"></div>
+                <p class="text-blue-100 text-sm font-medium">Sistema de Gestión Académica</p>
+                <p class="text-blue-100 text-sm font-medium">Código AMIE: 13H03277</p>
+            </div>
+        </div>
+
+        <!-- PARTE DERECHA: Cuadro de Login -->
+        <div class="w-full md:w-1/2 flex items-center justify-center p-8 bg-white">
+            <div class="w-full max-w-md bg-white p-4 md:p-8 rounded-2xl md:shadow-none">
+                
+                <!-- Logo o texto para celulares (Ya que la parte izquierda se oculta en pantallas chicas) -->
+                <div class="block md:hidden text-center mb-6">
+                    <!-- Escudo de tamaño moderado para celulares -->
+                    <img src="escudo-utm.png" alt="Escudo UTM" class="w-36 h-auto mx-auto mb-3">
+                    <h2 class="text-xl font-bold text-gray-800">Gestión Académica</h2>
+                </div>
+
+                <!-- Encabezado del Formulario -->
+                <div class="mb-8 hidden md:block">
+                    <h3 class="text-2xl font-bold text-gray-800">¡Bienvenido, Profesor!</h3>
+                    <p class="text-sm text-gray-500 mt-1">Por favor, ingrese sus credenciales para acceder al sistema.</p>
+                </div>
+
+                <!-- Formulario de Entrada -->
+                <form id="loginForm" class="space-y-5">
+                    <div>
+                        <label for="usuario" class="block text-xs font-bold text-gray-600 uppercase tracking-wider">Usuario / Correo:</label>
+                        <input type="text" id="usuario" required 
+                            class="w-full mt-1.5 p-3 border border-gray-300 rounded-lg text-sm bg-gray-50 outline-none focus:border-blue-600 focus:bg-white transition-all shadow-sm"
+                            placeholder="ejemplo@utm.edu.ec">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center">
+                            <label for="password" class="block text-xs font-bold text-gray-600 uppercase tracking-wider">Contraseña:</label>
+                        </div>
+                        <input type="password" id="password" required 
+                            class="w-full mt-1.5 p-3 border border-gray-300 rounded-lg text-sm bg-gray-50 outline-none focus:border-blue-600 focus:bg-white transition-all shadow-sm"
+                            placeholder="••••••••">
+                    </div>
+
+                    <button type="submit" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg text-sm shadow-md hover:shadow-lg transition duration-200 cursor-pointer uppercase tracking-wider mt-4">
+                        🚀 Ingresar al Sistema
+                    </button>
+                </form>
+
+                <!-- Pie de página del Login -->
+                <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+                    <p class="text-xs text-gray-400">© 2026 Escuela de Educación Básica Vicente Rocafuerte. Todos los derechos reservados.</p>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ⚙️ Lógica JavaScript Limpia y Sincronizada -->
+    <script>
+        const API_URL = 'http://localhost:3000';
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); 
+
+            const inputUsuario = document.getElementById('usuario').value;
+            const inputPassword = document.getElementById('password').value;
+
+            try {
+                const respuesta = await fetch(API_URL + '/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        correo: inputUsuario,       
+                        contrasena: inputPassword   
+                    }) 
+                });
+
+                const datos = await respuesta.json();
+
+                if (respuesta.ok) {
+                    // Guardamos la sesión usando la estructura de tu index.js (datos.docente.nombre)
+                    sessionStorage.setItem('usuario', datos.docente.nombre);
+                    
+                    // Alerta de confirmación
+                    alert("¡Bienvenido Profesor " + datos.docente.nombre + "! Entrando al sistema...");
+                    
+                    // Redirección
+                    window.location.href = 'index.html';
+                } else {
+                    // Si el backend responde con error
+                    alert("❌ Acceso Denegado: " + (datos.error || "Credenciales incorrectas"));
+                }
+            } catch (error) {
+                console.error(error);
+                alert("❌ Error de conexión: Asegúrate de que el backend (node index.js) esté encendido.");
+            }
+        });
+    </script>
+</body>
+</html>

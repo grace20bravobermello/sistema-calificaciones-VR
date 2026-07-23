@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Calificaciones - Prácticas UTM</title>
+    <!-- Tailwind CSS v4 -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen">
+
+    <div class="container mx-auto p-4 max-w-7xl">
+        <!-- Encabezado -->
+        <header class="bg-blue-600 text-white p-4 rounded-lg shadow-md mb-6 text-center">
+            <h1 class="text-2xl font-bold">📚 Sistema de Calificaciones</h1>
+            <p class="text-xs mt-1 opacity-90">Escuela de Educación Básica "Vicente Rocafuerte" - Prof. Edison</p>
+        </header>
+<!-- Accesos Rápidos en index.html -->
+<div class="flex gap-3 mb-6 bg-gray-50 p-3 rounded-lg border border-gray-100">
+    <a href="index.html" class="text-xs font-bold uppercase tracking-wider bg-blue-100 text-blue-700 px-3 py-2 rounded-md">
+        ⭐ Notas
+    </a>
+    <a href="asistencia.html" class="text-xs font-bold uppercase tracking-wider text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md transition">
+        📋 Asistencia
+    </a>
+    <button id="btnCerrarSesion" class="flex items-center gap-1.5 text-sm bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-4 py-2 rounded-lg transition font-semibold cursor-pointer whitespace-nowrap">
+            🚪 Cerrar Sesión
+        </button>
+</div>
+        <!-- SECCIÓN DE ARRIBA: Formulario -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 id="tituloFormulario" class="text-lg font-semibold text-gray-700">✏️ Registrar Nueva Calificación</h2>
+                <!-- Botón de cancelar edición oculto por defecto -->
+                <button id="btnCancelarEdicion" onclick="cancelarEdicion()" class="hidden px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white text-xs font-bold rounded shadow transition">
+                    ❌ Cancelar Edición
+                </button>
+            </div>
+            
+            <form id="formNotas" class="space-y-4">
+                <!-- Campo oculto para guardar el ID de la calificación cuando estemos editando -->
+                <input type="hidden" id="edit_id_calificacion" value="">
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase">Estudiante:</label>
+                        <select id="selectEstudiantes" class="w-full mt-1 p-2 border rounded bg-gray-50 text-sm focus:ring focus:ring-blue-300" required>
+                            <option value="">Cargando alumnos...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase">Asignatura / Materia:</label>
+                        <select id="materia" class="w-full mt-1 p-2 border rounded bg-gray-50 text-sm focus:ring focus:ring-blue-300" required>
+                            <option value="Lengua y Literatura">Lengua y Literatura</option>
+                            <option value="Matemáticas">Matemáticas</option>
+                            <option value="Ciencias Naturales">Ciencias Naturales</option>
+                            <option value="Estudios Sociales">Estudios Sociales</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase">Trimestre:</label>
+                        <select id="periodo" class="w-full mt-1 p-2 border rounded bg-gray-50 text-sm focus:ring focus:ring-blue-300" required>
+                            <option value="Trimestre 1">Trimestre 1</option>
+                            <option value="Trimestre 2">Trimestre 2</option>
+                            <option value="Trimestre 3">Trimestre 3</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 border-t pt-4">
+                    <!-- Tareas -->
+                    <div class="bg-blue-50/50 p-3 rounded border border-blue-100">
+                        <span class="text-xs font-bold text-blue-700 uppercase block mb-2">📚 Tareas (Actividades 1 al 6)</span>
+                        <div class="grid grid-cols-3 gap-2">
+                            <input type="number" step="0.01" min="0" max="10" id="act1" class="p-1.5 border rounded text-sm text-center bg-white" placeholder="Act 1">
+                            <input type="number" step="0.01" min="0" max="10" id="act2" class="p-1.5 border rounded text-sm text-center bg-white" placeholder="Act 2">
+                            <input type="number" step="0.01" min="0" max="10" id="act3" class="p-1.5 border rounded text-sm text-center bg-white" placeholder="Act 3">
+                            <input type="number" step="0.01" min="0" max="10" id="act4" class="p-1.5 border rounded text-sm text-center bg-white" placeholder="Act 4">
+                            <input type="number" step="0.01" min="0" max="10" id="act5" class="p-1.5 border rounded text-sm text-center bg-white" placeholder="Act 5">
+                            <input type="number" step="0.01" min="0" max="10" id="act6" class="p-1.5 border rounded text-sm text-center bg-white" placeholder="Act 6">
+                        </div>
+                    </div>
+
+                    <!-- Actuación -->
+                    <div class="bg-green-50/50 p-3 rounded border border-green-100">
+                        <span class="text-xs font-bold text-green-700 uppercase block mb-2">👥 Actuación en Clase (70%)</span>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" step="0.01" min="0" max="10" id="leccion" class="p-1.5 border rounded text-sm bg-white text-center" placeholder="Lección">
+                            <input type="number" step="0.01" min="0" max="10" id="expo" class="p-1.5 border rounded text-sm bg-white text-center" placeholder="Exposición">
+                            <input type="number" step="0.01" min="0" max="10" id="taller" class="p-1.5 border rounded text-sm bg-white text-center" placeholder="Taller">
+                            <input type="number" step="0.01" min="0" max="10" id="cuaderno" class="p-1.5 border rounded text-sm bg-white text-center" placeholder="Cuaderno">
+                        </div>
+                    </div>
+
+                    <!-- Proyecto y Examen -->
+                    <div class="bg-orange-50/50 p-3 rounded border border-orange-100 flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs font-bold text-orange-700 uppercase block mb-2">🎯 Evaluación (30%)</span>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="number" step="0.01" min="0" max="10" id="proyecto" class="p-1.5 border rounded text-sm bg-white text-center" placeholder="Proyecto">
+                                <input type="number" step="0.01" min="0" max="10" id="examen" class="p-1.5 border rounded text-sm bg-white text-center" placeholder="Examen">
+                            </div>
+                        </div>
+                        <button type="submit" id="btnGuardar" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow text-sm transition duration-200 cursor-pointer">
+                            Guardar Calificación
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Cuadro de Notas con Filtros de Pestañas -->
+        <div class="bg-white p-5 rounded-lg shadow-md">
+            
+            <div class="border-b pb-4 mb-4">
+                <h2 class="text-lg font-semibold text-gray-700 mb-3">📋 Cuadro General de Calificaciones</h2>
+                
+                <!-- 🎛️ Pestañas de Filtro -->
+                <div class="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center bg-gray-50 p-3 rounded-lg border">
+                    <!-- Filtro Materias -->
+                    <div class="flex flex-col gap-1 w-full md:w-auto">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Seleccionar Asignatura:</span>
+                        <div class="flex flex-wrap gap-1.5" id="filtrosMateria">
+                            <button onclick="filtrarPorMateria('Todas')" id="btn-mat-Todas" class="px-3 py-1 text-xs font-bold rounded-full bg-blue-600 text-white shadow cursor-pointer transition duration-150">Todas</button>
+                            <button onclick="filtrarPorMateria('Lengua y Literatura')" id="btn-mat-Lengua" class="px-3 py-1 text-xs font-medium rounded-full bg-white text-gray-700 border hover:bg-gray-100 cursor-pointer transition duration-150">Lengua y Literatura</button>
+                            <button onclick="filtrarPorMateria('Matemáticas')" id="btn-mat-Matematicas" class="px-3 py-1 text-xs font-medium rounded-full bg-white text-gray-700 border hover:bg-gray-100 cursor-pointer transition duration-150">Matemáticas</button>
+                            <button onclick="filtrarPorMateria('Ciencias Naturales')" id="btn-mat-Ciencias" class="px-3 py-1 text-xs font-medium rounded-full bg-white text-gray-700 border hover:bg-gray-100 cursor-pointer transition duration-150">Ciencias Naturales</button>
+                            <button onclick="filtrarPorMateria('Estudios Sociales')" id="btn-mat-Sociales" class="px-3 py-1 text-xs font-medium rounded-full bg-white text-gray-700 border hover:bg-gray-100 cursor-pointer transition duration-150">Estudios Sociales</button>
+                        </div>
+                    </div>
+
+                    <!-- Filtro Trimestre -->
+                    <div class="flex flex-col gap-1 w-full md:w-auto border-t md:border-t-0 pt-2 md:pt-0">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Seleccionar Trimestre:</span>
+                        <div class="flex flex-wrap gap-1.5" id="filtrosTrimestre">
+                            <button onclick="filtrarPorTrimestre('Todos')" id="btn-tri-Todos" class="px-3 py-1 text-xs font-bold rounded-full bg-blue-600 text-white shadow cursor-pointer transition duration-150">Todos</button>
+                            <button onclick="filtrarPorTrimestre('Trimestre 1')" id="btn-tri-Trimestre1" class="px-3 py-1 text-xs font-medium rounded-full bg-white text-gray-700 border hover:bg-gray-100 cursor-pointer transition duration-150">Trimestre 1</button>
+                            <button onclick="filtrarPorTrimestre('Trimestre 2')" id="btn-tri-Trimestre2" class="px-3 py-1 text-xs font-medium rounded-full bg-white text-gray-700 border hover:bg-gray-100 cursor-pointer transition duration-150">Trimestre 2</button>
+                            <button onclick="filtrarPorTrimestre('Trimestre 3')" id="btn-tri-Trimestre3" class="px-3 py-1 text-xs font-medium rounded-full bg-white text-gray-700 border hover:bg-gray-100 cursor-pointer transition duration-150">Trimestre 3</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Calificaciones -->
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 text-xs border">
+                    <thead class="bg-gray-100 font-bold text-gray-700">
+                        <tr class="divide-x text-[10px]">
+                            <th class="p-2 text-left min-w-[140px]">Estudiante</th>
+                            <th class="p-2 text-left">Materia</th>
+                            <th class="p-2 text-left">Periodo</th>
+                            
+                            <!-- Bloque 1: Tareas -->
+                            <th class="p-1 text-center bg-blue-50">A1</th>
+                            <th class="p-1 text-center bg-blue-50">A2</th>
+                            <th class="p-1 text-center bg-blue-50">A3</th>
+                            <th class="p-1 text-center bg-blue-50">A4</th>
+                            <th class="p-1 text-center bg-blue-50">A5</th>
+                            <th class="p-1 text-center bg-blue-50">A6</th>
+                            <th class="p-1 text-center bg-purple-100 text-purple-800 max-w-[55px]">Tareas (Prom)</th>
+                            
+                            <!-- Bloque 2: Actuaciones -->
+                            <th class="p-1 text-center bg-green-50">Lec</th>
+                            <th class="p-1 text-center bg-green-50">Exp</th>
+                            <th class="p-1 text-center bg-green-50">Tal</th>
+                            <th class="p-1 text-center bg-green-50">Cua</th>
+                            
+                            <!-- Totales del 70% Finos -->
+                            <th class="p-1 text-center bg-purple-100 text-purple-800 max-w-[50px]">Total (70%)</th>
+                            <th class="p-1 text-center bg-yellow-100 text-yellow-800 max-w-[45px]">70.00%</th>
+                            
+                            <!-- Bloque 3: Evaluación (30%) -->
+                            <th class="p-1 text-center bg-orange-50">Proy</th>
+                            <th class="p-1 text-center bg-orange-50">Exam</th>
+                            
+                            <!-- Totales del 30% Finos -->
+                            <th class="p-1 text-center bg-purple-100 text-purple-800 max-w-[50px]">Total (30%)</th>
+                            <th class="p-1 text-center bg-yellow-100 text-yellow-800 max-w-[45px]">30.00%</th>
+                            
+                            <!-- Resultado Final -->
+                            <th class="p-2 text-center bg-green-600 font-bold text-white text-xs max-w-[55px]">Prom. Trim.</th>
+                            <th class="p-2 text-center text-red-600 min-w-[110px]">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaCalificaciones" class="bg-white divide-y divide-gray-200 text-center">
+                        <tr>
+                            <td colspan="21" class="p-6 text-center text-gray-400 italic">No hay notas registradas todavía o no coinciden con los filtros aplicados.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        // 🛡️ CONTROL DE SEGURIDAD: Verificar si el docente inició sesión
+
+   const usuarioLogueado = sessionStorage.getItem('usuario');
+
+    if (!usuarioLogueado) {
+        alert("🔒 Acceso denegado: Por favor, inicie sesión primero.");
+        window.location.href = 'login.html';
+    } else {
+        console.log("¡Acceso concedido al profesor:", usuarioLogueado);
+    }
+
+        const API_URL = 'http://localhost:3000';
+        
+        // Variables globales
+        let materiaActiva = 'Todas';
+        let trimestreActivo = 'Todos';
+        let todasLasNotas = []; 
+        let editandoModo = false; // Flag para saber si estamos modificando un registro existente
+
+        const inputsNotas = ['act1', 'act2', 'act3', 'act4', 'act5', 'act6', 'leccion', 'expo', 'taller', 'cuaderno', 'proyecto', 'examen'];
+
+        // Restablece visualmente los inputs a su estado inicial editable
+        function restablecerInputs() {
+            inputsNotas.forEach(id => {
+                const input = document.getElementById(id);
+                input.value = '';
+                input.readOnly = false;
+                input.className = "p-1.5 border rounded text-sm text-center bg-white focus:ring focus:ring-blue-300";
+            });
+        }
+
+        //  CARGAR LISTA DE ESTUDIANTES EN EL SELECT
+        async function cargarEstudiantes() {
+            try {
+                const respuesta = await fetch(`${API_URL}/estudiantes`);
+                const estudiantes = await respuesta.json();
+                const select = document.getElementById('selectEstudiantes');
+                select.innerHTML = '<option value="">-- Seleccione un alumno --</option>';
+                estudiantes.forEach(est => {
+                    select.innerHTML += `<option value="${est.id_estudiante}">${est.apellido} ${est.nombre}</option>`;
+                });
+            } catch (error) {
+                console.error("Error cargando estudiantes:", error);
+            }
+        }
+
+        // OBTENER TODO EL HISTORIAL DEL SERVIDOR
+        async function cargarHistorialCalificaciones() {
+            try {
+                const respuesta = await fetch(`${API_URL}/historial-calificaciones`);
+                todasLasNotas = await respuesta.json();
+                renderizarTabla(); 
+            } catch (error) {
+                console.error("Error cargando historial:", error);
+            }
+        }
+
+        //  RENDERIZAR LA TABLA CON FILTROS Y BOTONES ADICIONALES
+        function renderizarTabla() {
+            const tabla = document.getElementById('tablaCalificaciones');
+            
+            const notasFiltradas = todasLasNotas.filter(n => {
+                const cumpleMateria = (materiaActiva === 'Todas' || n.materia === materiaActiva);
+                const cumpleTrimestre = (trimestreActivo === 'Todos' || n.periodo === trimestreActivo);
+                return cumpleMateria && cumpleTrimestre;
+            });
+
+            if(notasFiltradas.length === 0) {
+                tabla.innerHTML = `<tr><td colspan="21" class="p-6 text-center text-gray-400 italic">No hay notas registradas para esta materia y trimestre.</td></tr>`;
+                return;
+            }
+
+            tabla.innerHTML = '';
+            notasFiltradas.forEach(n => {
+                const prom_tareas = parseFloat(n.promedio_tareas || 0);
+                const lec = parseFloat(n.leccion || 0);
+                const ex = parseFloat(n.exposicion || 0);
+                const tal = parseFloat(n.taller || 0);
+                const cua = parseFloat(n.cuaderno || 0);
+                const proy = parseFloat(n.proyecto || 0);
+                const exam = parseFloat(n.examen || 0);
+
+                const total_70 = (prom_tareas + lec + ex + tal + cua).toFixed(2);
+                const total_30 = (proy + exam).toFixed(2);
+
+                tabla.innerHTML += `
+                    <tr class="hover:bg-gray-50 divide-x transition text-[11px] text-center">
+                        <td class="p-2 text-left font-bold text-gray-900">${n.apellido} ${n.nombre}</td>
+                        <td class="p-2 text-left text-gray-600">${n.materia}</td>
+                        <td class="p-2 text-left text-gray-500 font-medium">${n.periodo}</td>
+                        
+                        <td class="p-1 text-gray-600">${n.actividad_1}</td>
+                        <td class="p-1 text-gray-600">${n.actividad_2}</td>
+                        <td class="p-1 text-gray-600">${n.actividad_3}</td>
+                        <td class="p-1 text-gray-600">${n.actividad_4}</td>
+                        <td class="p-1 text-gray-600">${n.actividad_5}</td>
+                        <td class="p-1 text-gray-600">${n.actividad_6}</td>
+                        
+                        <td class="p-1 font-semibold text-purple-900 bg-purple-50/50 max-w-[55px]">${prom_tareas.toFixed(2)}</td>
+                        
+                        <td class="p-1 text-gray-600">${n.leccion}</td>
+                        <td class="p-1 text-gray-600">${n.exposicion}</td>
+                        <td class="p-1 text-gray-600">${n.taller}</td>
+                        <td class="p-1 text-gray-600">${n.cuaderno}</td>
+                        
+                        <td class="p-1 font-semibold text-purple-900 bg-purple-50/50 max-w-[50px]">${total_70}</td>
+                        <td class="p-1 font-bold text-yellow-800 bg-yellow-50 max-w-[45px]">${n.promedio_actividades_70}</td>
+                        
+                        <td class="p-1 text-gray-600">${n.proyecto}</td>
+                        <td class="p-1 text-gray-600">${n.examen}</td>
+                        
+                        <td class="p-1 font-semibold text-purple-900 bg-purple-50/50 max-w-[50px]">${total_30}</td>
+                        <td class="p-1 font-bold text-yellow-800 bg-yellow-50 max-w-[45px]">${n.promedio_examen_proyecto_30}</td>
+                        
+                        <td class="p-1 font-bold text-white bg-green-600 text-[11px] max-w-[55px]">${n.promedio_final_trimestre}</td>
+                        
+                        <td class="p-2 text-center flex justify-center gap-1">
+                            <button onclick="activarModoEdicion(${JSON.stringify(n).replace(/"/g, '&quot;')})" class="bg-yellow-100 text-yellow-700 hover:bg-yellow-500 hover:text-white font-bold py-1 px-1.5 rounded transition cursor-pointer text-[10px]">
+                                ✏️ Editar
+                            </button>
+                            <button onclick="eliminarNota(${n.id_calificacion})" class="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white font-bold py-1 px-1.5 rounded transition cursor-pointer text-[10px]">
+                                🗑️ Borrar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // FUNCIONES DE INTERCAMBIO DE PESTAÑAS (Filtros)
+        function filtrarPorMateria(materia) {
+            materiaActiva = materia;
+            const idsMapeo = {
+                'Todas': 'btn-mat-Todas',
+                'Lengua y Literatura': 'btn-mat-Lengua',
+                'Matemáticas': 'btn-mat-Matematicas',
+                'Ciencias Naturales': 'btn-mat-Ciencias',
+                'Estudios Sociales': 'btn-mat-Sociales'
+            };
+
+            Object.keys(idsMapeo).forEach(key => {
+                const btn = document.getElementById(idsMapeo[key]);
+                if (key === materia) {
+                    btn.className = "px-3 py-1 text-xs font-bold rounded-full bg-blue-600 text-white shadow cursor-pointer transition duration-150";
+                } else {
+                    btn.className = "px-3 py-1 text-xs font-medium rounded-full bg-white text-gray-700 border hover:bg-gray-100 cursor-pointer transition duration-150";
+                }
+            });
+
+            renderizarTabla();
+        }
+
+        function filtrarPorTrimestre(trimestre) {
+            trimestreActivo = trimestre;
+            const idsMapeo = {
+                'Todos': 'btn-tri-Todos',
+                'Trimestre 1': 'btn-tri-Trimestre1',
+                'Trimestre 2': 'btn-tri-Trimestre2',
+                'Trimestre 3': 'btn-tri-Trimestre3'
+            };
+
+            Object.keys(idsMapeo).forEach(key => {
+                const btn = document.getElementById(idsMapeo[key]);
+                if (key === trimestre) {
+                    btn.className = "px-3 py-1 text-xs font-bold rounded-full bg-blue-600 text-white shadow cursor-pointer transition duration-150";
+                } else {
+                    btn.className = "px-3 py-1 text-xs font-medium rounded-full bg-white text-gray-700 border hover:bg-gray-100 cursor-pointer transition duration-150";
+                }
+            });
+
+            renderizarTabla();
+        }
+
+        //  AUTOMATIZACIÓN DE CARGA / BLOQUEO DE NOTAS EXISTENTES
+        async function verificarNotasExistentes() {
+            // Si estamos en medio de una edición manual, evitamos que la función de verificación sobreescriba y bloquee los campos.
+            if (editandoModo) return;
+
+            const id_estudiante = document.getElementById('selectEstudiantes').value;
+            const materia = document.getElementById('materia').value;
+            const periodo = document.getElementById('periodo').value;
+
+            if (!id_estudiante) {
+                restablecerInputs();
+                return;
+            }
+
+            try {
+                const respuesta = await fetch(`${API_URL}/calificaciones/${id_estudiante}/${encodeURIComponent(materia)}/${encodeURIComponent(periodo)}`);
+                
+                if (respuesta.status === 404) {
+                    restablecerInputs();
+                    return;
+                }
+                
+                const nota = await respuesta.json();
+
+                if (nota) {
+                    const mapeo = {
+                        'act1': nota.actividad_1,
+                        'act2': nota.actividad_2,
+                        'act3': nota.actividad_3,
+                        'act4': nota.actividad_4,
+                        'act5': nota.actividad_5,
+                        'act6': nota.actividad_6,
+                        'leccion': nota.leccion,
+                        'expo': nota.exposicion,
+                        'taller': nota.taller,
+                        'cuaderno': nota.cuaderno,
+                        'proyecto': nota.proyecto,
+                        'examen': nota.examen
+                    };
+
+                    inputsNotas.forEach(id => {
+                        const input = document.getElementById(id);
+                        const valor = parseFloat(mapeo[id]);
+
+                        if (mapeo[id] !== null && !isNaN(valor) && valor > 0) {
+                            input.value = valor;
+                            input.readOnly = true;
+                            input.className = "p-1.5 border rounded text-sm text-center bg-gray-100 text-gray-500 font-bold cursor-not-allowed";
+                        } else {
+                            input.value = '';
+                            input.readOnly = false;
+                            input.className = "p-1.5 border rounded text-sm text-center bg-white focus:ring focus:ring-blue-300";
+                        }
+                    });
+                } else {
+                    restablecerInputs();
+                }
+            } catch (error) {
+                console.error("Error al verificar notas existentes:", error);
+                restablecerInputs();
+            }
+        }
+
+        document.getElementById('selectEstudiantes').addEventListener('change', verificarNotasExistentes);
+        document.getElementById('materia').addEventListener('change', verificarNotasExistentes);
+        document.getElementById('periodo').addEventListener('change', verificarNotasExistentes);
+
+        // NUEVA LÓGICA: ACTIVAR MODO DE EDICIÓN
+        function activarModoEdicion(notaObj) {
+            editandoModo = true;
+
+            // Cambiar textos visuales del formulario
+            document.getElementById('tituloFormulario').innerHTML = "✏️ Editando Calificación Existente";
+            document.getElementById('btnGuardar').innerHTML = "Actualizar Calificación";
+            document.getElementById('btnGuardar').className = "w-full mt-3 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded shadow text-sm transition duration-200 cursor-pointer";
+            document.getElementById('btnCancelarEdicion').classList.remove('hidden');
+
+            // Cargar los datos bases
+            document.getElementById('edit_id_calificacion').value = notaObj.id_calificacion;
+            document.getElementById('selectEstudiantes').value = notaObj.id_estudiante;
+            document.getElementById('materia').value = notaObj.materia;
+            document.getElementById('periodo').value = notaObj.periodo;
+
+            // Mapear y cargar todas las calificaciones desbloqueadas
+            const mapeo = {
+                'act1': notaObj.actividad_1,
+                'act2': notaObj.actividad_2,
+                'act3': notaObj.actividad_3,
+                'act4': notaObj.actividad_4,
+                'act5': notaObj.actividad_5,
+                'act6': notaObj.actividad_6,
+                'leccion': notaObj.leccion,
+                'expo': notaObj.exposicion,
+                'taller': notaObj.taller,
+                'cuaderno': notaObj.cuaderno,
+                'proyecto': notaObj.proyecto,
+                'examen': notaObj.examen
+            };
+
+            inputsNotas.forEach(id => {
+                const input = document.getElementById(id);
+                input.value = mapeo[id] || '';
+                input.readOnly = false; // Permitimos la edición libre del registro cargado
+                input.className = "p-1.5 border border-yellow-400 rounded text-sm text-center bg-yellow-50 focus:ring focus:ring-yellow-300 font-bold";
+            });
+
+            // Hacer scroll hacia arriba suave para que el docente vea el formulario inmediatamente
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Cancelar el modo edición y volver todo a la normalidad
+        function cancelarEdicion() {
+            editandoModo = false;
+            document.getElementById('edit_id_calificacion').value = '';
+            
+            document.getElementById('tituloFormulario').innerHTML = "✏️ Registrar Nueva Calificación";
+            document.getElementById('btnGuardar').innerHTML = "Guardar Calificación";
+            document.getElementById('btnGuardar').className = "w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow text-sm transition duration-200 cursor-pointer";
+            document.getElementById('btnCancelarEdicion').classList.add('hidden');
+
+            document.getElementById('formNotas').reset();
+            restablecerInputs();
+        }
+
+        // ELIMINAR CALIFICACIÓN
+        async function eliminarNota(id) {
+            if(confirm("¿Estás segura de que quieres eliminar esta calificación?")) {
+                try {
+                    const respuesta = await fetch(`${API_URL}/calificaciones/${id}`, { method: 'DELETE' });
+                    const resultado = await respuesta.json();
+                    alert(resultado.mensaje);
+                    if(editandoModo) cancelarEdicion();
+                    await cargarHistorialCalificaciones();
+                    await verificarNotasExistentes();
+                } catch (error) {
+                    alert("Error al eliminar la nota");
+                }
+            }
+        }
+
+        //  ENVIAR FORMULARIO (Guarda o Actualiza dinámicamente)
+        document.getElementById('formNotas').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const id_calificacion = document.getElementById('edit_id_calificacion').value;
+
+            const datos = {
+                id_estudiante: document.getElementById('selectEstudiantes').value,
+                materia: document.getElementById('materia').value,
+                periodo: document.getElementById('periodo').value,
+                act1: document.getElementById('act1').value,
+                act2: document.getElementById('act2').value,
+                act3: document.getElementById('act3').value,
+                act4: document.getElementById('act4').value,
+                act5: document.getElementById('act5').value,
+                act6: document.getElementById('act6').value,
+                leccion: document.getElementById('leccion').value,
+                expo: document.getElementById('expo').value,
+                taller: document.getElementById('taller').value,
+                cuaderno: document.getElementById('cuaderno').value,
+                proyecto: document.getElementById('proyecto').value,
+                examen: document.getElementById('examen').value
+            };
+
+            try {
+                let respuesta;
+                
+                if (editandoModo && id_calificacion) {
+                    // 🔄 EDITANDO REGISTRO EXISTENTE (Petición PUT)
+                    respuesta = await fetch(`${API_URL}/calificaciones/${id_calificacion}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(datos)
+                    });
+                } else {
+                    // 🆕 REGISTRANDO NUEVA CALIFICACIÓN (Petición POST)
+                    respuesta = await fetch(`${API_URL}/calificaciones`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(datos)
+                    });
+                }
+
+                const resultado = await respuesta.json();
+                alert(resultado.mensaje);
+                
+                // Finalizamos el modo edición si estuvo activo
+                cancelarEdicion();
+                
+                await cargarHistorialCalificaciones();
+                await verificarNotasExistentes();
+            } catch (error) {
+                alert("Error al procesar la calificación");
+            }
+        });
+
+        // Inicialización
+        cargarEstudiantes();
+        cargarHistorialCalificaciones();
+
+    </script>
+    <script>
+    document.getElementById('btnCerrarSesion').addEventListener('click', () => {
+        // Preguntar por seguridad si realmente desea salir
+        const confirmar = confirm("¿Está seguro de que desea cerrar sesión?");
+        
+        if (confirmar) {
+            //  Limpiar datos de sesión 
+            localStorage.clear(); 
+            sessionStorage.clear();
+
+            //  Redirigir al login 
+            window.location.href = 'login.html'; 
+        }
+    });
+</script>
+</body>
+</html>
