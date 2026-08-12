@@ -41,54 +41,93 @@
     </div>
 
     <script>
-        const API_URL = '';
+    const API_URL = '';
 
-        async function cargarEstudiantes() {
+    async function cargarEstudiantes() {
+        try {
             const res = await fetch(`${API_URL}/estudiantes`);
+            if (!res.ok) throw new Error("Error al obtener estudiantes");
             const datos = await res.json();
+            
             const tbody = document.getElementById('tablaEstudiantes');
             tbody.innerHTML = '';
             
+            if (datos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400 italic">No hay estudiantes registrados aún.</td></tr>`;
+                return;
+            }
+
             datos.forEach(est => {
                 tbody.innerHTML += `
-                    <tr class="border-b">
-                        <td class="p-3 border">${est.id_estudiante}</td>
-                        <td class="p-3 border">${est.nombre}</td>
-                        <td class="p-3 border">${est.apellido}</td>
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3 border text-center font-mono">${est.id_estudiante}</td>
+                        <td class="p-3 border font-semibold">${est.nombre}</td>
+                        <td class="p-3 border font-semibold">${est.apellido}</td>
                         <td class="p-3 border text-center">
-                            <button onclick="eliminarEstudiante(${est.id_estudiante})" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
-                                Eliminar
+                            <button onclick="eliminarEstudiante(${est.id_estudiante})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition cursor-pointer">
+                                🗑️ Eliminar
                             </button>
                         </td>
                     </tr>
                 `;
             });
+        } catch (error) {
+            console.error("Error al cargar lista:", error);
+        }
+    }
+
+    document.getElementById('formEstudiante').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nombre = document.getElementById('nombre').value.trim();
+        const apellido = document.getElementById('apellido').value.trim();
+
+        if (!nombre || !apellido) {
+            alert("Por favor, llena tanto el nombre como el apellido.");
+            return;
         }
 
-        document.getElementById('formEstudiante').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const nombre = document.getElementById('nombre').value;
-            const apellido = document.getElementById('apellido').value;
-
-            await fetch(`${API_URL}/estudiantes`, {
+        try {
+            const res = await fetch(`${API_URL}/estudiantes`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ nombre, apellido })
             });
 
-            document.getElementById('nombre').value = '';
-            document.getElementById('apellido').value = '';
-            cargarEstudiantes();
-        });
+            const data = await res.json();
 
-        async function eliminarEstudiante(id) {
-            if (confirm('¿Seguro que deseas eliminar a este estudiante?')) {
-                await fetch(`${API_URL}/estudiantes/${id}`, { method: 'DELETE' });
-                cargarEstudiantes();
+            if (res.ok) {
+                alert(data.mensaje || "✅ Estudiante agregado correctamente");
+                document.getElementById('nombre').value = '';
+                document.getElementById('apellido').value = '';
+                await cargarEstudiantes(); // Recarga la tabla de inmediato
+            } else {
+                alert("⚠️ El servidor respondió con un error: " + (data.error || "No se pudo guardar"));
+            }
+        } catch (error) {
+            console.error("Error al enviar formulario:", error);
+            alert("❌ Error de conexión al guardar el estudiante.");
+        }
+    });
+
+    async function eliminarEstudiante(id) {
+        if (confirm('¿Seguro que deseas eliminar a este estudiante?')) {
+            try {
+                const res = await fetch(`${API_URL}/estudiantes/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.mensaje || "Estudiante eliminado correctamente.");
+                    await cargarEstudiantes();
+                } else {
+                    alert("Error al eliminar: " + (data.error || "No se pudo procesar"));
+                }
+            } catch (error) {
+                console.error("Error al eliminar:", error);
+                alert("Error de conexión al intentar eliminar.");
             }
         }
+    }
 
-        cargarEstudiantes();
-    </script>
+    document.addEventListener('DOMContentLoaded', cargarEstudiantes);
+</script>
 </body>
 </html>
