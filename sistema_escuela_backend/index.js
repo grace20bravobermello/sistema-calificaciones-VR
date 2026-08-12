@@ -370,6 +370,7 @@ app.get('/asistencia-resumen', async (req, res) => {
 // ==================== RUTAS DE GESTIÓN DE ESTUDIANTES ====================
 
 // 1. Agregar un nuevo estudiante
+// 1. Agregar un nuevo estudiante
 app.post('/estudiantes', async (req, res) => {
     const { nombre, apellido } = req.body;
     
@@ -390,7 +391,7 @@ app.post('/estudiantes', async (req, res) => {
         });
     } catch (error) {
         console.error("Error al agregar estudiante:", error);
-        res.status(500).send("Error al registrar el estudiante en la base de datos");
+        res.status(500).json({ error: "Error de base de datos: " + error.message });
     }
 });
 
