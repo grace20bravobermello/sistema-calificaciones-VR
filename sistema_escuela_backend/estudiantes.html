@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Estudiantes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">👤 Gestión de Estudiantes</h1>
+            <a href="index.html" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                ← Volver a Notas
+            </a>
+        </div>
+
+        <!-- Formulario para agregar -->
+        <form id="formEstudiante" class="flex gap-4 mb-6">
+            <input type="text" id="nombre" placeholder="Nombre" required class="border p-2 rounded w-full">
+            <input type="text" id="apellido" placeholder="Apellido" required class="border p-2 rounded w-full">
+            <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition font-bold">
+                Agregar
+            </button>
+        </form>
+
+        <!-- Tabla de Estudiantes -->
+        <table class="w-full text-left border-collapse border border-gray-200">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="p-3 border">ID</th>
+                    <th class="p-3 border">Nombre</th>
+                    <th class="p-3 border">Apellido</th>
+                    <th class="p-3 border text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tablaEstudiantes">
+                <!-- Se cargan dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_URL = '';
+
+        async function cargarEstudiantes() {
+            const res = await fetch(`${API_URL}/estudiantes`);
+            const datos = await res.json();
+            const tbody = document.getElementById('tablaEstudiantes');
+            tbody.innerHTML = '';
+            
+            datos.forEach(est => {
+                tbody.innerHTML += `
+                    <tr class="border-b">
+                        <td class="p-3 border">${est.id_estudiante}</td>
+                        <td class="p-3 border">${est.nombre}</td>
+                        <td class="p-3 border">${est.apellido}</td>
+                        <td class="p-3 border text-center">
+                            <button onclick="eliminarEstudiante(${est.id_estudiante})" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        document.getElementById('formEstudiante').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById('nombre').value;
+            const apellido = document.getElementById('apellido').value;
+
+            await fetch(`${API_URL}/estudiantes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, apellido })
+            });
+
+            document.getElementById('nombre').value = '';
+            document.getElementById('apellido').value = '';
+            cargarEstudiantes();
+        });
+
+        async function eliminarEstudiante(id) {
+            if (confirm('¿Seguro que deseas eliminar a este estudiante?')) {
+                await fetch(`${API_URL}/estudiantes/${id}`, { method: 'DELETE' });
+                cargarEstudiantes();
+            }
+        }
+
+        cargarEstudiantes();
+    </script>
+</body>
+</html>
