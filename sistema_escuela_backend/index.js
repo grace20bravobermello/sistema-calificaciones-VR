@@ -9,7 +9,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 📁 Servir los archivos estáticos de la interfaz web (HTML, CSS, JS)
+// Servir los archivos estáticos de la interfaz web (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, '.')));
 
 // 🛢️ Configuración dinámica de la base de datos (Render o Local)
@@ -28,7 +28,7 @@ const pool = new Pool(
       }
 );
 
-// 🏠 Ruta raíz: Redirige automáticamente al Login cuando se ingrese a la URL
+// Ruta raíz: Redirige automáticamente al Login cuando se ingrese a la URL
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html'));
 });
@@ -364,6 +364,83 @@ app.get('/asistencia-resumen', async (req, res) => {
     } catch (error) {
         console.error("Error al obtener resumen de asistencia:", error);
         res.status(500).send("Error al generar el reporte de asistencia");
+    }
+});
+
+// ==================== RUTAS DE GESTIÓN DE ESTUDIANTES ====================
+
+// 1. Agregar un nuevo estudiante
+app.post('/estudiantes', async (req, res) => {
+    const { nombre, apellido } = req.body;
+    
+    if (!nombre || !apellido) {
+        return res.status(400).json({ error: "El nombre y apellido son obligatorios." });
+    }
+
+    try {
+        const consultaSQL = `
+            INSERT INTO estudiantes (nombre, apellido) 
+            VALUES ($1, $2) 
+            RETURNING *;
+        `;
+        const resultado = await pool.query(consultaSQL, [nombre.trim(), apellido.trim()]);
+        res.json({
+            mensaje: "✅ Estudiante agregado correctamente",
+            estudiante: resultado.rows[0]
+        });
+    } catch (error) {
+        console.error("Error al agregar estudiante:", error);
+        res.status(500).send("Error al registrar el estudiante en la base de datos");
+    }
+});
+
+// 2. Editar un estudiante existente
+app.put('/estudiantes/:id', async (req, res) => {
+    const { id } = req.params;
+    const { nombre, apellido } = req.body;
+
+    try {
+        const consultaSQL = `
+            UPDATE estudiantes 
+            SET nombre = $1, apellido = $2 
+            WHERE id_estudiante = $3 
+            RETURNING *;
+        `;
+        const resultado = await pool.query(consultaSQL, [nombre.trim(), apellido.trim(), id]);
+
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({ error: "Estudiante no encontrado" });
+        }
+
+        res.json({
+            mensaje: "✅ Datos del estudiante actualizados correctamente",
+            estudiante: resultado.rows[0]
+        });
+    } catch (error) {
+        console.error("Error al actualizar estudiante:", error);
+        res.status(500).send("Error al editar el estudiante");
+    }
+});
+
+// 3. Eliminar un estudiante (Dar de baja)
+app.delete('/estudiantes/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Primero elimina calificaciones y asistencias asociadas para mantener integridad referencial
+        await pool.query('DELETE FROM calificaciones WHERE id_estudiante = $1;', [id]);
+        await pool.query('DELETE FROM asistencia WHERE id_estudiante = $1;', [id]);
+        
+        // Luego elimina al estudiante
+        const resultado = await pool.query('DELETE FROM estudiantes WHERE id_estudiante = $1 RETURNING *;', [id]);
+
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({ error: "Estudiante no encontrado" });
+        }
+
+        res.json({ mensaje: "🗑️ Estudiante eliminado correctamente" });
+    } catch (error) {
+        console.error("Error al eliminar estudiante:", error);
+        res.status(500).send("Error al eliminar el estudiante de la base de datos");
     }
 });
 
